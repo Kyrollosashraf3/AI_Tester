@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .status {
+            font-weight: bold;
+            color: green;
+        }
+        .status.error {
+            color: red;
+        }
+        .summary {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .turns {
+            list-style: none;
+            padding: 0;
+        }
+        .turn {
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
+        }
+        .turn .role {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .turn .ts {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .turn .content {
+            margin: 10px 0;
+        }
+        .turn .logs {
+            font-size: 0.9em;
+            color: #555;
+            background: #fff3cd;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Tester</h1>
+        <button id="runBtn">Run Tester</button>
+        <div id="output" class="result" style="display: none;">
+            <h2>Results</h2>
+            <div id="status"></div>
+            <div id="times"></div>
+            <div id="error" style="display: none;"></div>
+            <div id="summary" class="summary" style="display: none;"></div>
+            <h3>Turns</h3>
+            <ul id="turns" class="turns"></ul>
+        </div>
+        <div id="loading" class="loading" style="display: none;">Running tester...</div>
+    </div>
+
+    <script>
+        document.getElementById('runBtn').addEventListener('click', async () => {
+            const output = document.getElementById('output');
+            const loading = document.getElementById('loading');
+            const runBtn = document.getElementById('runBtn');
+
+            runBtn.disabled = true;
+            loading.style.display = 'block';
+            output.style.display = 'none';
+
+            try {
+                const response = await fetch('/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display results
+                document.getElementById('status').innerHTML = `<span class="status ${data.success ? '' : 'error'}">Success: ${data.success}</span>`;
+                document.getElementById('times').innerHTML = `Started: ${new Date(data.started_at).toLocaleString()} | Ended: ${new Date(data.ended_at).toLocaleString()}`;
+
+                if (data.error) {
+                    document.getElementById('error').innerHTML = `<strong>Error:</strong> ${data.error}`;
+                    document.getElementById('error').style.display = 'block';
+                } else {
+                    document.getElementById('error').style.display = 'none';
+                }
+
+                if (data.final_summary) {
+                    document.getElementById('summary').innerHTML = `<strong>Final Summary:</strong><br>${data.final_summary}`;
+                    document.getElementById('summary').style.display = 'block';
+                } else {
+                    document.getElementById('summary').style.display = 'none';
+                }
+
+                const turnsList = document.getElementById('turns');
+                turnsList.innerHTML = '';
+                data.turns.forEach(turn => {
+                    const li = document.createElement('li');
+                    li.className = 'turn';
+                    li.innerHTML = `
+                        <div class="role">${turn.role}</div>
+                        <div class="ts">${new Date(turn.ts).toLocaleString()}</div>
+                        <div class="content">${turn.content}</div>
+                        ${turn.logs_report ? `<div class="logs"><strong>Logs:</strong> ${turn.logs_report}</div>` : ''}
+                    `;
+                    turnsList.appendChild(li);
+                });
+
+                output.style.display = 'block';
+            } catch (error) {
+                alert('Error running tester: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                runBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

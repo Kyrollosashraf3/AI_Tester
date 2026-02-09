@@ -77,6 +77,7 @@ problem 3 : extraction memory always needed ?  or p1
 json needs parse 
 
 
+
 TESTER/
 ├── app/
 │   ├── main.py                     # Entry point (python -m app.main)
@@ -123,7 +124,7 @@ TESTER/
 
 {
 'log_type': ['main_model', 'intent_classifier', 'extraction_model'], 
-
+'log_error': .Null 
 'intent_classifier': 'property_search',
 'extraction_answers': ['no', 'family_growth', 'unknown', 'researching']
 }       
