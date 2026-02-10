@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/*.pyo": true,
+        "**/*.pyd": true,
+        ".Python": true,
+        "env/": true,
+        "venv/": true,
+        "ENV/": true,
+        "env.bak/": true,
+        "venv.bak/": true
+    }
+}

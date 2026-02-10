@@ -1,144 +1,50 @@
-# Tester
+# AI Tester
 
+A FastAPI-based application for testing AI chat systems, analyzing logs, and generating reports on conversation quality.
 
-# logs_out 
- {
-  'log_type':
-    ['intent_classifier', 'extraction_model' , main_model, ...........],
-      'intent_classifier': 'general_chat',
-     
-      'extraction_answers': 
-                ['uncertain', 'medium', 'medium', 'not_sure', 'medium', 'medium']
-}
+## Features
 
+- Automated AI chat testing with configurable parameters
+- Log analysis and error detection
+- Turn-based conversation orchestration
+- Web interface for easy access
+- Integration with OpenAI models
 
+## Installation
 
-T1:
-{
-  "normal_path": false,
-  "Log_error": {
-    "name": "Unexpected intent classification",   #############################
-    "details": "intent_classifier: general_chat"  #############################
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Set up environment variables:
+   - `OPENAI_API_KEY`: Your OpenAI API key
 
-  },
-  "actual": {
-    "present_log_types": [
-      "main_model",
-      "intent_classifier",
-      "extraction_model"
-    ]
-  },
-  "Lost_expected_log": {
-    "log_type": "memory_extraction",     ############################  
-    
-    "reason": "User revealed preference for stability property"
-  }
-}
+## Usage
 
-# Problem 0
-     عايز اسو ال error الحقيقي لو ظهر 
-Add to prompt : Memoery rules , intent_classifier types
+1. Run the application:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
+2. Open your browser to `http://localhost:8000` for the web interface
 
+3. Use the API endpoint:
+   - POST `/run`: Run the AI tester and get a report
 
+## Configuration
 
-# problem 1
+Edit `app/config/settings.py` to configure:
+- API URLs
+- Model settings
+- Timeouts and limits
+- Initial messages
 
-Log Analyzer – Input: 
-- Last real agent message:  response 1  : Stability is a strong reason to buy,
-- User response: : hello i need to buy a new property for stability
+## Project Structure
 
-add role , content 0 :
- hello iam real estate agent how can i help you
-
-
-انا مش عايز رده - انا عايز سؤال و اجابة و لوج 
-
-first user message : real + user
-
-- rael 1 : how can i help
-- user 1 : i need condo 
-- logs
-
-- real : Stability is a strong reason , when to move ?
-- user : 6 months
-- logs
-
-OR
-==========================================
-problem 1:    user_message : n-1 delay with logs   
-logs b with user mess A
-
-
-problem 2 : repeat json 
-
-problem 3 : extraction memory always needed ?  or p1
-
-json needs parse 
-
-
-
-TESTER/
-├── app/
-│   ├── main.py                     # Entry point (python -m app.main)
-│   ├── config/
-│   │   ├── __init__.py
-│   │   ├── settings.py             # env + constants
-│   │   └── types.py
-        └── logger.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── llm/
-│   │   │   └── driver.py            # llm_driver
-│   │   ├── logs/
-│   │   │   ├── reader.py            # LogsReader
-│   │   │   ├── analyser.py          # log_analyser
-│   │   │   └── checker.py           # build_Logs_checker_prompt
-│   │   ├── orchestration/
-│   │   │   └── orchestrator.py
-│   │   ├── persona/
-│   │   │   ├── persona.py
-│   │   │   └── prompts.py
-│   │   └── utils/
-│   │       └── json_utils.py
-│   ├── clients/
-│   │   ├── chat_client.py
-│   │   └── logs_client.py
-│   ├── routes/
-│   │   ├── run.py                  # /run tester
-│   │   
-│   ├── dto/
-│   │   └── schemas.py              # pydantic models (reports, logs, etc.)
-│   └── __init__.py
-├── .env.example   : OPENAI_API_KEY
-├── .gitignore
-├── README.md
-├── requirements.txt
-
-
-
-
-
-
-++ out :  
-
-{
-'log_type': ['main_model', 'intent_classifier', 'extraction_model'], 
-'log_error': .Null 
-'intent_classifier': 'property_search',
-'extraction_answers': ['no', 'family_growth', 'unknown', 'researching']
-}       
-
-
-
-Logs_analyser : 
-``` { "normal_path": true,
- "Log_error": null,
-  "actual": [ "main_model","intent_classifier", "extraction_model" ],
-    "Lost_expected_log": null,
-    
-    "intent_response": "property_search",
-    "extraction_answers": [ "uncertain", "balanced" ],
-    "bug_description": null } ```
-
-
+- `main.py`: FastAPI application entry point
+- `app/routes/`: API routes
+- `app/core/`: Core logic (LLM, orchestration, logs)
+- `app/clients/`: API clients for chat and logs
+- `app/config/`: Configuration and types
+- `templates/`: HTML templates
