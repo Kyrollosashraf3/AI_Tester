@@ -50,9 +50,9 @@ Step B — Decide which backend steps SHOULD have happened:
 create an "expected" object with booleans:
 - intent_classifier (Always true)
 - main_model (Always true)
-- extraction_model (true if the user response contains Agent quiestion Answer that should be extracted)
-- memory_extraction (true if buyer revealed preferences or personal constraints)
-- web_search (true ONLY if the agent response requires external factual info / listings / market data)
+- extraction_model (true if the user response contains Agent question Answer that should be extracted - i.e., user is answering a specific real estate question from the agent's previous message)
+- memory_extraction (true if buyer revealed preferences or personal constraints - e.g., budget, location preferences, family size, timeline)
+- web_search (true ONLY if the agent response requires external factual info / listings / market data - e.g., current prices, market trends, property listings, or when intent_classifier detected property_search intent)
 - slow_path (true if the expected services imply slow_path orchestration)
 Also give a short reason for each expected step.
 
@@ -77,10 +77,37 @@ Extraction:
   * If intent_classifier exists, look intent_response : .
   * If memory_extraction exists, look extracted_memories.
   * If extraction_model exists, look extracted_answers.
-- if you found any unexpected value in all of them : add to output json bug_description: <describe in 8 words> or None. (ex : intent_response is proberty_search while user message did not need any web search)
+- if you found any unexpected value in all of them : add to output json bug_description: <describe in 10 words> or None. (ex : intent_response is proberty_search while user message did not need any web search)
+
+## REAL ESTATE SPECIFIC RULES FOR EXPECTED ACTIONS:
+
+### extraction_model (Answer Extraction):
+- TRUE when: User is directly answering an agent's question about their preferences (e.g., "What's your budget?", "How many bedrooms?", "Where do you want to live?")
+- FALSE when: User is just chatting, asking questions, or giving general responses like "yes", "no", "thanks"
+- Example TRUE: Agent asks "What's your budget?" → User says "$500k" → extraction_model should run
+- Example FALSE: Agent gives summary → User says "thanks" → no extraction needed
+
+### memory_extraction (Preference Memory):
+- TRUE when: User reveals personal info, preferences, or constraints (budget, location, family size, timeline, lifestyle needs)
+- FALSE when: User gives short confirmations or asks questions
+- Example TRUE: User says "I have 3 kids and need 4 bedrooms in Austin" → memory_extraction should run
+- Example FALSE: User says "yes" to a summary → no new memories to extract
+
+### web_search (Property Search):
+- TRUE ONLY when: Agent response requires current market data, listings, or prices (e.g., "Let me show you current listings in Austin", "Market prices are...", or when intent_classifier flagged property_search)
+- FALSE when: Agent is just asking questions, giving advice, or summarizing preferences
+- Example TRUE: Agent says "Based on your preferences, here are current listings..." → web_search should have run
+- Example FALSE: Agent asks "What's your budget?" → no web search needed
+
+### BUG DETECTION:
+- web_search bug: If web_search ran but agent message doesn't mention current data/listings/prices
+- extraction bug: If extraction_model ran but user didn't answer a specific question
+- memory bug: If memory_extraction ran but user only gave generic response
 
 ## when to be normal_path: false:
-- if in
+- if web_search happened inappropriately (agent not showing listings/market data)
+- if extraction_model missed when user answered a question
+- if memory_extraction missed when user revealed preferences
 
 ### OUTPUT FORMAT (STRICT JSON ONLY):
 Return ONLY one JSON object:
@@ -101,7 +128,6 @@ Return ONLY one JSON object:
   "bug_description": "<describe in 10 words>" | null
      }
 
-     
 Rules:
 - OUTPUT AS JSON only. No extra text.
 - Use null if no Log_error or no Lost_expected_log.
