@@ -9,6 +9,8 @@ from typing import Literal, Optional
 class Turn:
     role: Literal["user", "assistant"]
     content: str
+    user_id: Optional[str]
+    session_id: Optional[str]
     ts: datetime
     logs_report: Optional[str] = None
 
@@ -23,6 +25,8 @@ class ChatResult:
 @dataclass
 class RunReport:
     success: bool
+    user_id: Optional[str]
+    session_id: Optional[str]
     turns: list["Turn"]
     final_summary: Optional[str]
     started_at: datetime

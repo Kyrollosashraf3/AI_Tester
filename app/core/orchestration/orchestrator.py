@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from app.config.types import RunReport, Turn
-from app.config.settings import LOGS_API_URL, LOGS_LIMIT
+from app.config.settings import LOGS_API_URL, LOGS_LIMIT, USER_ID
 
 from app.core.persona.persona import persona_context, is_question, stop_condition
 
@@ -43,7 +43,7 @@ class Orchestrator:
         """Run the conversation until stop condition or limits."""
         started_at = datetime.utcnow()
         turns: list[Turn] = []
-        session_id: Optional[str] = None
+        session_id: Optional[str] = str(uuid4())
         persona = persona_context()
         current_user_message = initial_user_message
         assistant_text = initial_real_estate_message
@@ -69,6 +69,8 @@ class Orchestrator:
                     logger.error("max_total_seconds exceeded")
                     return RunReport(
                         success=False,
+                        user_id = USER_ID,
+                        session_id= session_id, 
                         turns=turns,
                         final_summary=None,
                         started_at=started_at,
@@ -77,8 +79,8 @@ class Orchestrator:
                     )
 
                 # 1) Start Chat real_estate
-                turns.append(Turn(role="assistant", content=assistant_text, ts=datetime.utcnow()))     # why do u need to buy
-                turns.append(Turn(role="user", content=current_user_message, ts=datetime.utcnow()))     # hello i need ... for stability 
+                turns.append(Turn(role="assistant", user_id=  USER_ID, session_id= session_id,content=assistant_text, ts=datetime.utcnow()))     # why do u need to buy
+                turns.append(Turn(role="user",      user_id=  USER_ID, session_id= session_id, content=current_user_message, ts=datetime.utcnow()))     # hello i need ... for stability 
 
                 logger.info(f"real_estate_message = {assistant_text}")
                 logger.info(f"Turn {turn_index + 1}: user msg (len={len(current_user_message)})")
@@ -87,7 +89,12 @@ class Orchestrator:
                 result = self.chat.send_message(current_user_message, session_id)  # very good - stability , when > logs
                 session_id = result.session_id or session_id
 
-                #turns.append(Turn(role="assistant", content=assistant_text, ts=datetime.utcnow()))  
+               
+
+                # Update session_id in all existing turns
+                for turn in turns:
+                    turn.session_id = session_id
+
                 
                 # return : new response from real estate , with result LOGS   
                 # take logs to analysis now ,, then take this response in next turn
@@ -116,9 +123,7 @@ class Orchestrator:
 
                 # 4) send message (SSE)  NOW take the response
                 assistant_text = result.assistant_text.strip()   # very good - stability , when
-                #logger.info(f"assistant_text: {assistant_text}")
                 
-                #turns.append(Turn(role="assistant", content=assistant_text, ts=datetime.utcnow()))
                 turns[-1].logs_report = report_logs
 
                 # 4) determine if response is Q or stop
@@ -130,8 +135,13 @@ class Orchestrator:
                 )
 
                 if stopped:
-                     return RunReport(success=True, turns=turns, final_summary=assistant_text,
-                         started_at=started_at,ended_at=datetime.utcnow(),error=None,)
+                     return RunReport(success=True,
+                                        user_id = USER_ID,
+                                        session_id= session_id, 
+                                        turns=turns, 
+                                        final_summary=assistant_text,
+                                        started_at=started_at,
+                                        ended_at=datetime.utcnow(),error=None,)
 
                 
                 if is_q:      # if true   > generate new user message , give it to current_user_message
@@ -148,6 +158,8 @@ class Orchestrator:
             logger.info("max_turns exceeded")
             return RunReport(
                 success=True,
+                user_id = USER_ID,
+                session_id= session_id,
                 turns=turns,
                 final_summary=None,
                 started_at=started_at,
@@ -158,6 +170,8 @@ class Orchestrator:
             logger.error(f"Exception in run: {e}")
             return RunReport(
                 success=False,
+                user_id = USER_ID,
+                session_id= session_id,
                 turns=turns,
                 final_summary=None,
                 started_at=started_at,

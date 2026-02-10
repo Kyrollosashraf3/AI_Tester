@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from app.config.types import RunReport, Turn
 
 from app.config.settings import (
     API_URL,
@@ -18,7 +19,7 @@ from app.config.settings import (
 )
 from app.clients.chat_client import ChatClient
 from app.core.llm.driver import LLMDriver
-from app.core.orchestration.orchestrator import Orchestrator
+from app.core.orchestration.orchestrator import Orchestrator 
 from app.config.logger import get_logger
 
 logger = get_logger(__name__)
@@ -26,23 +27,8 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
-class TurnModel(BaseModel):
-    role: str
-    content: str
-    ts: datetime
-    logs_report: Optional[str] = None
 
-
-class RunReportModel(BaseModel):
-    success: bool
-    turns: List[TurnModel]
-    final_summary: Optional[str]
-    started_at: datetime
-    ended_at: datetime
-    error: Optional[str]
-
-
-@router.post("/run", response_model=RunReportModel)
+@router.post("/run", response_model=RunReport, response_model_exclude_none=True)
 async def run_tester():
     """Run the AI tester and return the report."""
     try:
@@ -51,15 +37,18 @@ async def run_tester():
         driver = LLMDriver(OPENAI_MODEL, api_key_env="OPENAI_API_KEY")
         orchestrator = Orchestrator(chat, driver, MAX_TURNS, MAX_TOTAL_SECONDS)
         report = orchestrator.run(INITIAL_USER_MESSAGE, INITIAL_REAL_Estate_MESSAGE)
-
+        session_id = report.session_id
+        
         if report.final_summary:
             logger.info("Final summary generated")
         else:
             logger.info("Run completed without final summary")
 
-        return RunReportModel(
+        return RunReport(
             success=report.success,
-            turns=[TurnModel(role=t.role, content=t.content, ts=t.ts, logs_report=t.logs_report) for t in report.turns],
+            user_id=  USER_ID,
+            session_id=session_id ,
+            turns=[Turn(role=t.role, user_id=  USER_ID, session_id= t.session_id    , content=t.content, ts=t.ts, logs_report=t.logs_report) for t in report.turns],
             final_summary=report.final_summary,
             started_at=report.started_at,
             ended_at=report.ended_at,
