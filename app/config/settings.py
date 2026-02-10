@@ -6,7 +6,10 @@ API_URL: str = "........."
 # stage
 #API_URL: str = "........."
 
-USER_ID: str = "558b6e88-b314-4d66-9ed6-2406d87a8039"
+
+from uuid import uuid4
+USER_ID = str(uuid4())
+
 OPENAI_MODEL: str = "gpt-4o"
 TIMEOUT_SEC: int = 40
 RETRY_COUNT: int = 3
