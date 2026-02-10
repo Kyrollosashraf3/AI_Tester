@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from dotenv import load_dotenv
 from app.routes.run import router as run_test_router
+
+load_dotenv()
 
 app = FastAPI()
 
