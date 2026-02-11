@@ -10,5 +10,5 @@
         "ENV/": true,
         "env.bak/": true,
         "venv.bak/": true
-    }
-}
+    },
+       "python.languageServer": "None"}
