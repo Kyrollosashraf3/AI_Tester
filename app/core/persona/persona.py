@@ -74,3 +74,42 @@ def stop_condition(text: str) -> bool:
     if words >= 80 and paragraphs >= 2:
         return True
     return False
+
+
+
+fields: str = """
+Has the pre-approval calculator been offered?
+What's happening in your life now?
+Why are you buying a home?
+Have you been pre-approved by a lender?
+How ready are you for the next step?
+How comfortable are you with the process?
+When do you want to buy?
+How confident are you in making decisions?
+How much do you trust your own judgment?
+How important is stability to you?
+How clear is your vision of the future?
+How do you usually make decisions?
+What matters most to you in this purchase?
+What sparked your interest in buying?
+How well does homeownership fit your identity?
+Do you have a specific deadline?
+How urgent does this feel to you?
+What is your annual income?
+What are your deal-breakers for location?
+How important is affordability?
+Do you prefer urban, suburban, or rural?
+What do you need nearby?
+Which state are you looking in?
+Minimum number of bathrooms?
+Maximum number of bedrooms?
+Minimum number of bedrooms?
+How much can you put down?
+How do you plan to finance?
+What are your nice-to-haves?
+What monthly payment are you comfortable with?
+What are your must-haves?
+Do you need outdoor space?
+What type of home do you want?
+What's the average home price you're considering?
+"""
