@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal, Optional , Any
 
 
 @dataclass
@@ -13,6 +13,7 @@ class Turn:
     session_id: Optional[str]
     ts: datetime
     logs_report: Optional[str] = None
+    my_log: dict[str, Any]= None
 
 
 @dataclass

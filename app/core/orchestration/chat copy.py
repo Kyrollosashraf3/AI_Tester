@@ -102,6 +102,7 @@ class Orchestrator:
                 # 2) --- read logs for THIS message only ---
                 # We rely on cursor-by-max-id. Since session starts new (session_id=None),
                 # first call should safely return logs for first message too, so prime_if_first_time=False.
+                
                 try:
                     user_id = getattr(self.chat, "user_id", None)
                     if user_id and session_id:
@@ -111,20 +112,25 @@ class Orchestrator:
                             limit=LOGS_LIMIT,
                             prime_if_first_time=False if turn_index == 0 else True,
                         )
+                        turns[-1].my_log = new_logs
 
                 except Exception as e:
                     logger.error(f"Failed to read logs: {e}")
 
                 # 3) check logs
                 """new logs : json -- send it to llm with last user message and real_estate response """
-                report_logs = self.log_analyser.analyse(last_assistant=assistant_text, user_response=current_user_message, logs=new_logs)
+                #report_logs = self.log_analyser.analyse(last_assistant=assistant_text, user_response=current_user_message, logs=new_logs)
 
-                logger.info(f"report_logs: {report_logs}")
+                #logger.info(f"report_logs: {report_logs}")
+                logger.info(f"report_logs: {new_logs}")
 
                 # 4) send message (SSE)  NOW take the response
                 assistant_text = result.assistant_text.strip()   # very good - stability , when
                 
-                turns[-1].logs_report = report_logs
+                #turns[-1].logs_report = report_logs
+                
+                # I NEED TO SEE LOGS TYPE AFTER USER MESSAGE FROM logs_reader.get_logs 
+                print( f"Turn {turn_index + 1}  new_logs {new_logs} " )
 
                 # 4) determine if response is Q or stop
                 is_q = is_question(assistant_text)

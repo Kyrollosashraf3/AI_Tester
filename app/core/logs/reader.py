@@ -37,14 +37,18 @@ class LogsReader:
         session_id: str,
         limit: int = 200,
         prime_if_first_time: bool = True,
-    ) -> list[dict[str, Optional[str]]]:
+    ) -> dict[str, Optional[str]]:
         """
         Returns:
-          [{"log_type": str|None,   "error_message": str|None}, ...]
+          {"log_type": str|None,   "error_message": str|None}, ...
+         
+        output example: 
+            {
+            "log_type": ["main_model","intent_classifier"],
+            "intent_classifier": "general_chat" , 
+            "extraction_answers": [  ,  ,  ]
+            }
 
-        - By default, first call for (user_id, session_id) primes cursor and returns [].
-          This prevents returning historic logs.
-        - Next calls return only what's new (id > last_seen_max_id).
         """
         key = (user_id, session_id)
 
@@ -152,14 +156,14 @@ class LogsReader:
                 out["log_type"].append(logtype if isinstance(logtype, str) else "unknown")
 
         logger.info(f"Prepared logs: {out}")
-        return [out]
+        return out
 
 
 # Convenience singleton function: def get_logs()
 _reader_singleton: Optional[LogsReader] = None
 
 
-def get_logs(user_id: str, session_id: str) -> list[dict[str, Optional[str]]]:
+def get_logs(user_id: str, session_id: str) -> dict[str, Optional[str]]:
     """
     Drop-in helper returning only:
       [{"log_type": ..., "error_message": ...}, ...]
