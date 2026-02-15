@@ -9,8 +9,14 @@ from app.routes.run_report import router as run_report_router
 
 load_dotenv()
 
-app = FastAPI(title="AI_Tester", version="1.0.0", description="Tester for Real_estate_Agent")
-
+app = FastAPI(
+    title="AI_Tester", 
+    version="1.0.0", 
+    description="Tester for Real_estate_Agent",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
 app.include_router(run_chat_router, prefix="/chat")
 app.include_router(run_report_router, prefix="/report")
 
