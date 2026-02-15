@@ -121,7 +121,7 @@ Return ONLY one JSON object:
   "actual":{ actual logs type }  ,
 
   "intent_response": <general_chat or property_search>
-  "extraction_answers": ["<answer1>", "<answer2>", ...] | null,
+  "extraction_answers":[{"qid":" ","answer":" "} ,{"qid":" " , "answer":" "}]| null,
   
   "Lost_expected_logs":
     { "log_type" :[ <Lost_expected_log1> ,<Lost_expected_log2>, ... ], 

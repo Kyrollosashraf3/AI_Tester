@@ -48,3 +48,28 @@ Edit `app/config/settings.py` to configure:
 - `app/clients/`: API clients for chat and logs
 - `app/config/`: Configuration and types
 - `templates/`: HTML templates
+
+
+
+## Examples of output
+
+- My Logs:
+{
+  "log_type": [
+    "main_model",
+    "intent_classifier",
+    "extraction_model"
+  ],
+  "intent_classifier": "general_chat",
+  "extraction_answers": [
+      {
+         "qid": "initial_interest",
+         "answer": "stability"
+      },
+      {
+         "qid": "motivation_mode",
+         "answer": "lifestyle"
+      }
+  ]
+}
+

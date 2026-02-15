@@ -1,6 +1,7 @@
 # app/core/logs/reader.py
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 import json
 from app.clients.logs_client import LogsApiClient
@@ -100,15 +101,16 @@ class LogsReader:
     def prepare_logs(self, new_logs) -> dict[str, Any]:
 
         #
-        intent_response: str | None = None
+        intent_response:    str | None = None
         extraction_answers: list[str] = []
-        error_messages: list[str] = []
+        error_messages:     list[str] = []
+        memories:           list[str] = []
 
         for l in new_logs:
             logtype = l.get("log_type")
             raw_resp = l.get("response")
             log_error = l.get("error_message")
-
+            
             # -------- collect error_message from ANY log --------
             if isinstance(log_error, str) and log_error.strip():
                 error_messages.append(log_error.strip())
@@ -119,6 +121,31 @@ class LogsReader:
                     intent_response = raw_resp.strip()
                 continue
 
+
+            # Answer Extraction from main_model
+            # main_model > Response > Parse After ( <!--EXTRACT: ) > [{"qid":" ","answer":" "} ,{"qid":" " , "answer":" "}]
+
+            if logtype == "main_model":
+                if isinstance(raw_resp, str) and raw_resp.strip():
+
+                    match = re.search(r"<!--EXTRACT:(.*?)-->", raw_resp, re.DOTALL)
+                    if match:
+                        try:
+                            extraction_answers = json.loads(match.group(1).strip())
+                            logger.info(f"catch extraction answers :  {extraction_answers}")
+                        
+                        except Exception:
+                            extraction_answers = []
+
+                """
+                raw_prompt = l.get("prompt")
+                m = re.search(r"### WHAT YOU REMEMBER\s*(.*?)(?:\n## |\n=== |\Z)", raw_prompt, re.DOTALL)
+                all_memories = re.findall(r"^\s*-\s+(.*)$", m.group(1), re.MULTILINE) if m else []
+                memories = all_memories #[-3:]
+"""
+
+
+            """         
             # -------- extraction_model (optional) --------
             if logtype == "extraction_model":
                 if not isinstance(raw_resp, str) or not raw_resp.strip():
@@ -135,6 +162,8 @@ class LogsReader:
                 for a in answers:
                     if isinstance(a, dict) and a.get("answer") is not None:
                         extraction_answers.append(str(a["answer"]))
+"""
+
 
         # -------- build final output --------
         out: dict[str, Any] = {
@@ -146,9 +175,12 @@ class LogsReader:
             out["log_type"].append("extraction_model")
             out["extraction_answers"] = extraction_answers
 
+        if memories:
+           out["log_type"].append("memory_extraction")
+           out["Memories"] = memories
+        
         if error_messages:
             out["log_type"].append("error")
-
             out["error_message"] = " | ".join(dict.fromkeys(error_messages))
 
         # default: include type once
