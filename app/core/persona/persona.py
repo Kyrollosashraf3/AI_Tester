@@ -43,39 +43,6 @@ def persona_context() -> dict:
     return dict(PERSONA)
 
 
-def is_question(text: str) -> bool:
-    """Treat the assistant message as requiring a reply if it asks something."""
-    if not text or not text.strip():
-        return False
-    t = text.strip().lower()
-    if "?" in text:
-        return True
-    for start in QUESTION_STARTERS:
-        if t.startswith(start):
-            return True
-    if re.search(r":\s*$", text.strip()):
-        return True
-    return False
-
-
-def stop_condition(text: str) -> bool:
-    """Stop when assistant outputs a final Summary/closing message."""
-    if not text or not text.strip():
-        return False
-    lower = text.lower()
-    if "i've gathered all the information i need" in lower:
-        return True
-    if "based on our conversation" in lower:
-        return True
-    if "would you like to continue with" in lower:
-        return True
-    words = len(text.split())
-    paragraphs = len([p for p in text.split("\n\n") if p.strip()])
-    if words >= 80 and paragraphs >= 2:
-        return True
-    return False
-
-
 
 fields: str = """
 Has the pre-approval calculator been offered?

@@ -7,7 +7,8 @@ from uuid import uuid4
 from app.config.types import RunReport, Turn
 from app.config.settings import LOGS_API_URL, LOGS_LIMIT, USER_ID
 
-from app.core.persona.persona import persona_context, is_question, stop_condition
+from app.core.persona.persona import persona_context
+from app.core.persona.tracker import  is_question, stop_condition, extract_last_question , deduplicate_questions
 
 from app.clients.logs_client import LogsApiClient
 from app.core.logs.reader import LogsReader
@@ -60,6 +61,7 @@ class report_orchestrator:
         )
         logs_reader = LogsReader(logs_client)
 
+        asked_Questions= []
         try:
             for turn_index in range(self.max_turns):
 
@@ -67,6 +69,10 @@ class report_orchestrator:
                 elapsed = (datetime.utcnow() - started_at).total_seconds()
                 if elapsed >= self.max_total_seconds:
                     logger.error("max_total_seconds exceeded")
+                    
+                    # Check duplicated Quesions
+                    duplicated = deduplicate_questions(asked_Questions)               
+                    
                     return RunReport(
                         success=False,
                         user_id = USER_ID,
@@ -76,6 +82,8 @@ class report_orchestrator:
                         started_at=started_at,
                         ended_at=datetime.utcnow(),
                         error="max_total_seconds exceeded",
+                        duplicate= duplicated
+                        
                     )
 
                 # 1) Start Chat real_estate
@@ -133,18 +141,28 @@ class report_orchestrator:
                     f"assistant len={len(assistant_text)}, is_question={is_q}, "
                     f"stop_condition={stopped}, session_id={session_id}"
                 )
-
+                # GET last qustion fore repeat Test
+                last_question = extract_last_question(assistant_text)
+                asked_Questions.append(last_question)
+                logger.info(f"last_question : {last_question}")
+            
+            
                 if stopped:
-                     return RunReport(success=True,
+                    # Check duplicated Quesions
+                    duplicated = deduplicate_questions(asked_Questions)               
+            
+                    return RunReport(success=True,
                                         user_id = USER_ID,
                                         session_id= session_id, 
                                         turns=turns, 
                                         final_summary=assistant_text,
                                         started_at=started_at,
-                                        ended_at=datetime.utcnow(),error=None,)
+                                        ended_at=datetime.utcnow(),error=None,
+                                        duplicate= duplicated)
 
                 
-                if is_q:      # if true   > generate new user message , give it to current_user_message
+                if is_q:      
+                    # if true   > generate new user message , give it to current_user_message
                     recent = turns[-10:] if len(turns) >= 10 else turns
                     current_user_message = self.driver.generate_reply(persona, assistant_text, recent)     # 6 months
 
@@ -155,6 +173,11 @@ class report_orchestrator:
 
                 logger.info(f"final message to new turn--- current_user_message: {current_user_message}")
 
+
+
+            # Check duplicated Quesions
+            duplicated = deduplicate_questions(asked_Questions)               
+            
             logger.info("max_turns exceeded")
             return RunReport(
                 success=True,
@@ -165,9 +188,14 @@ class report_orchestrator:
                 started_at=started_at,
                 ended_at=datetime.utcnow(),
                 error="max_turns exceeded",
+                duplicate= duplicated
             )
         except Exception as e:
             logger.error(f"Exception in run: {e}")
+
+            # Check duplicated Quesions
+            duplicated = deduplicate_questions(asked_Questions)               
+           
             return RunReport(
                 success=False,
                 user_id = USER_ID,
@@ -177,4 +205,5 @@ class report_orchestrator:
                 started_at=started_at,
                 ended_at=datetime.utcnow(),
                 error=str(e),
+                duplicate= duplicated
             )

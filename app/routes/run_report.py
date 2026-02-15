@@ -57,7 +57,8 @@ async def run_tester():
             final_summary=report.final_summary,
             started_at=report.started_at,
             ended_at=report.ended_at,
-            error=report.error
+            error=report.error,
+            duplicate= report.duplicate
         )
     except Exception as e:
         logger.error(f"Error running tester: {e}")

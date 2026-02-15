@@ -33,3 +33,4 @@ class RunReport:
     started_at: datetime
     ended_at: datetime
     error: Optional[str]
+    duplicate: Optional[str] = None

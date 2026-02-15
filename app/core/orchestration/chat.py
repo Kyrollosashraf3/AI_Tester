@@ -7,7 +7,8 @@ from uuid import uuid4
 from app.config.types import RunReport, Turn
 from app.config.settings import LOGS_API_URL, LOGS_LIMIT, USER_ID
 
-from app.core.persona.persona import persona_context, is_question, stop_condition
+from app.core.persona.persona import persona_context
+from app.core.persona.tracker import  is_question, stop_condition, extract_last_question #, deduplicate_questions
 
 from app.clients.logs_client import LogsApiClient
 from app.core.logs.reader import LogsReader
@@ -59,6 +60,7 @@ class chat_orchestrator:
             retry_count=retry_count,
         )
         logs_reader = LogsReader(logs_client)
+        Questions= []
 
         try:
             for turn_index in range(self.max_turns):
@@ -128,6 +130,14 @@ class chat_orchestrator:
                     f"stop_condition={stopped}, session_id={session_id}"
                 )
 
+
+                # GET last qustion fore repeat Test
+                last_question = extract_last_question(assistant_text)
+                Questions.append(last_question)
+                logger.info(f"last_question : {last_question}")
+                print("my questions ** : " , Questions)
+                
+                
                 if stopped:
                      return RunReport(success=True,
                                         user_id = USER_ID,
